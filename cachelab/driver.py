@@ -99,32 +99,32 @@ def main():
     # Summarize the results
     print("\nCache Lab summary:")
     print("%-22s%8s%10s%12s" % ("", "Points", "Max pts", "Misses"))
-    print("%-22s%8.1f%10d" % ("Csim correctness", csim_cscore[0], )
-                              maxscore['csim'])
+    print("%-22s%8.1f%10d" % ("Csim correctness", csim_cscore[0], 
+                              maxscore['csim']))
 
     misses = str(miss32)
     if miss32 == 2**31-1 :
         misses = "invalid"
-    print("%-22s%8.1f%10d%12s" % ("Trans perf 32x32", trans32_score, )
-                                  maxscore['trans32'], misses)
+    print("%-22s%8.1f%10d%12s" % ("Trans perf 32x32", trans32_score, 
+                                  maxscore['trans32'], misses))
 
     misses = str(miss64)
     if miss64 == 2**31-1 :
         misses = "invalid"
-    print("%-22s%8.1f%10d%12s" % ("Trans perf 64x64", trans64_score, )
-                                  maxscore['trans64'], misses)
+    print("%-22s%8.1f%10d%12s" % ("Trans perf 64x64", trans64_score, 
+                                  maxscore['trans64'], misses))
 
     misses = str(miss61)
     if miss61 == 2**31-1 :
         misses = "invalid"
-    print("%-22s%8.1f%10d%12s" % ("Trans perf 61x67", trans61_score, )
-                                  maxscore['trans61'], misses)
+    print("%-22s%8.1f%10d%12s" % ("Trans perf 61x67", trans61_score, 
+                                  maxscore['trans61'], misses))
 
-    print("%22s%8.1f%10d" % ("Total points", total_score,)
+    print("%22s%8.1f%10d" % ("Total points", total_score,
                              maxscore['csim'] + 
                              maxscore['trans32'] + 
                              maxscore['trans64'] +
-                             maxscore['trans61'])
+                             maxscore['trans61']))
     
     # Emit autoresult string for Autolab if called with -A option
     if autograde:
