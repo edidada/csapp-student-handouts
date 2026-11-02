@@ -1,0 +1,24 @@
+name: CSAPP Data Lab
+on:
+  push:
+    branches: [edidada/datalab]
+  workflow_dispatch:
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        optimization: [0, 2]
+    env:
+      CFLAGS: -O${{ matrix.optimization }} -std=gnu99 -Wall -m32 -fwrapv
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y gcc-multilib
+      - run: bash scripts/run_datalab.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: datalab-O${{ matrix.optimization }}
+          path: datalab/results/

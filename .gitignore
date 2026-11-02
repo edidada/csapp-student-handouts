@@ -5,3 +5,8 @@ __pycache__/
 *.pyc
 .venv/
 **/target/
+**/results/
+**/*.o
+/datalab/btest
+/datalab/fshow
+/datalab/ishow
