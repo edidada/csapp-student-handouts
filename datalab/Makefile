@@ -2,7 +2,7 @@
 # Makefile that builds btest and other helper programs for the CS:APP data lab
 # 
 CC = gcc
-CFLAGS ?= -O1 -std=gnu99 -Wall -m32 -fwrapv
+CFLAGS ?= -O1 -std=gnu99 -Wall -m32 -fwrapv -fno-strict-aliasing -msse2 -mfpmath=sse
 LIBS = -lm
 
 all: btest fshow ishow

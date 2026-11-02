@@ -12,7 +12,7 @@ jobs:
       matrix:
         optimization: [0, 2]
     env:
-      CFLAGS: -O${{ matrix.optimization }} -std=gnu99 -Wall -m32 -fwrapv
+      CFLAGS: -O${{ matrix.optimization }} -std=gnu99 -Wall -m32 -fwrapv -fno-strict-aliasing -msse2 -mfpmath=sse
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y gcc-multilib

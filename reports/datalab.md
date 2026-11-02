@@ -7,3 +7,5 @@
 整数部分遵循 handout 的运算符、常量、直线代码与操作数限制，不使用循环、条件分支或函数调用；浮点部分按原题允许分支。官方 dlc 检查规则和操作数上限，btest 检查数值正确性，driver.pl 综合评分，三者都不改写。driver 不带提交参数，不上传校内服务器。
 
 独立 datalab.yml 在 GitHub Ubuntu runner 安装 32 位开发库，分别用 GCC O0/O2 构建和执行。-fwrapv 对齐实验指定的 32 位二补码模型，不宣称这些技巧适用于任意 C 实现；libm 放到链接命令末尾。CI 解析官方输出，要求 btest 和 driver 的实际得分都等于各自满分，不把进程返回 0 单独当成通过。原始 dlc/btest/driver 日志保存 artifact。本地不编译，最终结论以对应 Actions 为准。
+
+首次完整 O0/O2 运行通过；后续复验出现 floatPower2 官方参考实现耗时超过默认 10 秒，而本函数没有循环。32 位 x87 的浮点慢路径会影响计时，CI 显式启用 x86 runner 支持的 SSE2 单精度运算，并关闭旧测试代码的 strict-aliasing 优化假设。未减少测试输入、未改评分或超时门槛；修正后的最终结果仍以新的 Actions 实测为准。
