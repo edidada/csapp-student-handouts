@@ -18,7 +18,7 @@ ishow: ishow.c
 
 # Forces a recompile. Used by the driver program. 
 btestexplicit:
-	$(CC) $(CFLAGS) -o btest bits.c btest.c decl.c tests.c $(LIBS) 
+	$(CC) $(CFLAGS) -o btest bits.c btest.c decl.c tests.c $(LIBS)
 
 clean:
 	rm -f *.o btest fshow ishow *~
