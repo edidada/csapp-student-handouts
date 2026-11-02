@@ -10,3 +10,13 @@ __pycache__/
 /datalab/btest
 /datalab/fshow
 /datalab/ishow
+
+/cachelab/csim
+/cachelab/test-trans
+/cachelab/tracegen
+/cachelab/*.o
+/cachelab/*.tar
+/cachelab/trace.*
+/cachelab/.csim_results
+/cachelab/.marker
+/cachelab/*-grade.log
