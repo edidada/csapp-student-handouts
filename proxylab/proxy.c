@@ -265,7 +265,14 @@ static void *worker(void *arg)
     pthread_detach(pthread_self());
     setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));
     setsockopt(fd,SOL_SOCKET,SO_SNDTIMEO,&timeout,sizeof(timeout));
-    transaction(fd); close(fd); return NULL;
+    transaction(fd);
+    /* Deliver an error response before closing a request with unread suffix.
+     * Drain only currently available bytes, bounded against malicious senders. */
+    shutdown(fd,SHUT_WR);
+    { char discard[4096]; size_t drained=0; ssize_t n;
+      while(drained<REQUEST_LIMIT && (n=recv(fd,discard,sizeof(discard),MSG_DONTWAIT))>0) drained+=(size_t)n;
+    }
+    close(fd); return NULL;
 }
 int main(int argc,char **argv)
 {

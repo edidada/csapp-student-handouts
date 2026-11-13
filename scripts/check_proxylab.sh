@@ -155,6 +155,17 @@ c.close(); s.close()
    s.sendall(f'GET http://127.0.0.1:{port}/binary?abort={i} HTTP/1.0\r\n\r\n'.encode())
    s.setsockopt(socket.SOL_SOCKET,socket.SO_LINGER,struct.pack('ii',1,0))
  time.sleep(.3); assert process.poll() is None; assert fetch('/survived-reset')==response(b'/survived-reset'); ok('40-reset-clients-sigpipe-survival')
+ # Repeated completed requests must not accumulate descriptors or joinable threads.
+ fetch('/fd-probe')
+ with concurrent.futures.ThreadPoolExecutor(max_workers=32) as pool:
+  assert all(x==response(b'/fd-probe') for x in pool.map(lambda _:fetch('/fd-probe'),range(500)))
+ for _ in range(100):
+  fds=len(list(Path(f'/proc/{process.pid}/fd').iterdir()))
+  threads=int(next(x.split(':')[1] for x in Path(f'/proc/{process.pid}/status').read_text().splitlines() if x.startswith('Threads:')))
+  if fds<=6 and threads<=3: break
+  time.sleep(.02)
+ assert fds<=6 and threads<=3,(fds,threads)
+ assert count('/fd-probe')==1; ok('500-cache-requests-no-fd-thread-accumulation')
  # Warmed cache must remain usable after origin disappears.
  fetch('/offline'); origin.shutdown(); origin.server_close()
  assert fetch('/offline')==response(b'/offline'); ok('offline-cache-with-origin-down')
