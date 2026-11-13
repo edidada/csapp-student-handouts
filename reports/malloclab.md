@@ -9,3 +9,5 @@
 当前尚待对应提交远端CI结果，不计验收完成。原公开包只含两条短调试trace，config列出的11条完整trace未包含，不能把两条通过或其性能指数冒充完整官方评分。尚需更多真实工作负载的利用率/吞吐测量；独立压力检查不替代缺失评分trace。
 
 另外生成small/mixed/realloc三类×两种子的六条合成trace，原driver同时测libc与本实现，保存利用率、吞吐和全部trace；这些只补公开工作负载证据，不命名或替代缺失的11条官方trace。
+
+原driver存在plain char符号比较缺陷：memset写index低8位，随后newp[j]与index&255比较，在默认signed char下，ID131的0x83提升为-125而错误失败。两条原short仍按原Makefile验证；256 ID合成trace另将原mdriver.c单独以-funsigned-char编译并链接同一分配器对象，不改驱动源码或缩减ID/期望数据。独立重放每步检查全部payload，避免依赖驱动这一历史问题。
