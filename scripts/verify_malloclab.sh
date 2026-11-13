@@ -42,16 +42,22 @@ for kind in ['small','mixed','realloc']:
   for i in live: ops.append(f'f {i}')
   (out/f'{kind}-{seed}.rep').write_text(f'0\n{slots}\n{len(ops)}\n1\n'+'\n'.join(ops)+'\n')
 PY
-# The old driver compares plain char against index & 255. With signed char,
-# byte 131 becomes -125 and fails even for correctly preserved data. Keep
-# original short tests unchanged; select unsigned plain char only for this
-# unmodified driver translation unit, preserving full 256-ID workloads.
-cc -Wall -O2 -m32 -funsigned-char -Imalloclab malloclab/mdriver.c \
+# Adapt only the old driver's byte promotion in a generated compatibility copy.
+# -funsigned-char also breaks its char getopt/EOF loop, so retain normal char
+# semantics and cast exactly the byte comparison; repository source stays intact.
+python3 - <<'PY'
+from pathlib import Path
+s=Path('malloclab/mdriver.c').read_text()
+old='if (newp[j] != (index & 0xFF))'
+assert s.count(old)==1
+Path('.tools/mdriver-byte.c').write_text(s.replace(old,'if ((unsigned char)newp[j] != (index & 0xFF))'))
+PY
+cc -Wall -O2 -m32 -Imalloclab .tools/mdriver-byte.c \
   malloclab/mm.o malloclab/memlib.o malloclab/fsecs.o malloclab/fcyc.o \
-  malloclab/clock.o malloclab/ftimer.o -o .tools/mdriver-unsigned
+  malloclab/clock.o malloclab/ftimer.o -o .tools/mdriver-byte
 for trace in test-results/traces/*.rep; do
   ASAN_OPTIONS=detect_leaks=1 timeout 300 .tools/stress-32 "$trace" | tee "${trace%.rep}-replay.log"
-  (cd malloclab && timeout 180 ../.tools/mdriver-unsigned -l -V -f "../$trace") | tee "${trace%.rep}.log"
+  (cd malloclab && timeout 180 ../.tools/mdriver-byte -l -V -f "../$trace") | tee "${trace%.rep}.log"
   grep -q 'Perf index' "${trace%.rep}.log"
   if grep -Eq 'ERROR|Terminated with' "${trace%.rep}.log"; then exit 1; fi
 done

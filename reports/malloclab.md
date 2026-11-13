@@ -10,4 +10,4 @@
 
 另外生成small/mixed/realloc三类×两种子的六条合成trace，原driver同时测libc与本实现，保存利用率、吞吐和全部trace；这些只补公开工作负载证据，不命名或替代缺失的11条官方trace。
 
-原driver存在plain char符号比较缺陷：memset写index低8位，随后newp[j]与index&255比较，在默认signed char下，ID131的0x83提升为-125而错误失败。两条原short仍按原Makefile验证；256 ID合成trace另将原mdriver.c单独以-funsigned-char编译并链接同一分配器对象，不改驱动源码或缩减ID/期望数据。独立重放每步检查全部payload，避免依赖驱动这一历史问题。
+原driver存在plain char符号比较缺陷：memset写index低8位，随后newp[j]与index&255比较，默认signed char下ID131的0x83提升为-125而错误失败。独立重放确认该位置实际数据保持。尝试-funsigned-char还会破坏旧驱动char c=getopt的EOF判断，不能采用。最终两条原short仍按完全未改的原Makefile验证；256 ID合成trace在运行时生成驱动兼容副本，仅将这一字节比较强转unsigned char，断言原表达式恰好出现一次；原mdriver.c保持不变。该副本测量明确为兼容驱动结果，不声称原驱动在默认signed char下通过256 ID。分配器对象完全相同，未缩减ID或期望数据，另有独立重放每步检查全部payload。
