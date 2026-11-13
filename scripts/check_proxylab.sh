@@ -82,10 +82,23 @@ try:
  assert fetch('')==response(b'/'); assert fetch('?q=yes')==response(b'/?q=yes'); ok('missing-path-query-default')
  assert raw_request(f'GET /origin-form HTTP/1.0\r\nHost: 127.0.0.1:{port}\r\n\r\n'.encode())==response(b'/origin-form'); ok('origin-form-explicit-port')
  # Required default HTTP port, served by a separate fixture on port 80.
- default=Server(('127.0.0.1',80),Handler)
- threading.Thread(target=default.serve_forever,daemon=True).start()
- try: assert fetch('/default-port',authority='127.0.0.1')==response(b'/default-port')
- finally: default.shutdown(); default.server_close()
+ # A narrowly scoped runner-only helper binds privileged port 80; proxy stays
+ # unprivileged and no account/capability/kernel settings are changed.
+ default_code="""import socket
+s=socket.socket(); s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+s.bind(('127.0.0.1',80)); s.listen(1); s.settimeout(10)
+print('READY',flush=True)
+c,_=s.accept(); c.settimeout(5); data=b''
+while b'\r\n\r\n' not in data: data+=c.recv(4096)
+body=b'/default-port'
+c.sendall(b'HTTP/1.0 200 OK\r\nContent-Length: '+str(len(body)).encode()+b'\r\n\r\n'+body)
+c.close(); s.close()
+"""
+ default=subprocess.Popen(['sudo','-n','python3','-u','-c',default_code],stdout=subprocess.PIPE,text=True)
+ try:
+  assert default.stdout.readline().strip()=='READY'
+  assert fetch('/default-port',authority='127.0.0.1')==response(b'/default-port')
+ finally: assert default.wait(timeout=15)==0
  ok('default-port-80')
  invalid=[(b'POST http://localhost/ HTTP/1.0\r\n\r\n',501),
   (b'GET https://localhost/ HTTP/1.0\r\n\r\n',400),
