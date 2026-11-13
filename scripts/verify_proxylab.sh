@@ -17,8 +17,10 @@ grep -q 'cacheScore: 15/15' test-results/original-driver.log
 grep -q 'totalScore: 70/70' test-results/original-driver.log
 for mode in normal sanitized; do
   if [ "$mode" = sanitized ]; then
+    cc -std=gnu11 -Wall -O1 -g -fsanitize=address,undefined \
+      -fno-omit-frame-pointer -pthread -Iproxylab -c proxylab/csapp.c -o .tools/csapp-sanitized.o
     cc -std=gnu11 -Wall -Wextra -Werror -O1 -g -fsanitize=address,undefined \
-      -fno-omit-frame-pointer -pthread -Iproxylab proxylab/proxy.c proxylab/csapp.c -o .tools/proxy-sanitized
+      -fno-omit-frame-pointer -pthread -Iproxylab proxylab/proxy.c .tools/csapp-sanitized.o -o .tools/proxy-sanitized
     binary="$PWD/.tools/proxy-sanitized"
   else binary="$PWD/proxylab/proxy"; fi
   PROXY_BIN="$binary" PROXY_MODE="$mode" bash scripts/check_proxylab.sh | tee "test-results/extra-$mode.log"
