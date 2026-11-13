@@ -199,6 +199,7 @@ void eval(char *cmdline)
         kill(-pid, SIGKILL);
     } else if (bg) {
         printf("[%d] (%d) %s", pid2jid(pid), (int)pid, cmdline);
+        fflush(stdout);
     }
     sigprocmask(SIG_SETMASK, &previous, NULL);
     if (!bg) waitfg(pid);
@@ -274,6 +275,7 @@ int builtin_cmd(char **argv)
         sigfillset(&all);
         sigprocmask(SIG_BLOCK, &all, &previous);
         listjobs(jobs);
+        fflush(stdout);
         sigprocmask(SIG_SETMASK, &previous, NULL);
         return 1;
     }
@@ -321,6 +323,7 @@ void do_bgfg(char **argv)
     job->state = foreground ? FG : BG;
     kill(-pid, SIGCONT);
     if (!foreground) printf("[%d] (%d) %s", job->jid, (int)pid, job->cmdline);
+    fflush(stdout);
     sigprocmask(SIG_SETMASK, &previous, NULL);
     if (foreground) waitfg(pid);
 }

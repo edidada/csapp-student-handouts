@@ -32,3 +32,4 @@ for n in range(1,17):
 assert all(r['passed'] for r in results),results
 print('ORIGINAL_TRACES_OK count=16')
 PY
+bash scripts/verify_shlab_jobs.sh
