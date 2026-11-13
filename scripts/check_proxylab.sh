@@ -84,7 +84,7 @@ try:
  # Required default HTTP port, served by a separate fixture on port 80.
  # A narrowly scoped runner-only helper binds privileged port 80; proxy stays
  # unprivileged and no account/capability/kernel settings are changed.
- default_code="""import socket
+ default_code=r"""import socket
 s=socket.socket(); s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 s.bind(('127.0.0.1',80)); s.listen(1); s.settimeout(10)
 print('READY',flush=True)
