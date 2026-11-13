@@ -184,7 +184,7 @@ void eval(char *cmdline)
         signal(SIGCHLD, SIG_DFL);
         sigprocmask(SIG_SETMASK, &previous, NULL);
         execve(argv[0], argv, environ);
-        printf("%s: Command not found.\n", argv[0]);
+        printf("%s: Command not found\n", argv[0]);
         fflush(stdout);
         _exit(1);
     }
