@@ -64,7 +64,7 @@ for p in sorted(Path('test-results/traces').glob('*.log')):
  text=p.read_text()
  sections=text.split('Results for mm malloc:')
  assert len(sections)==2,p
- match=re.search(r'^\s*0\s+yes\s+(\d+)%\s+(\d+)\s+([\d.]+)\s+([\d.]+)',sections[1],re.M)
+ match=re.search(r'^\s*0\s+yes\s+(\d+)%\s+(\d+)\s+(\d+\.\d{6})\s*(\d+)',sections[1],re.M)
  assert match,p
  records.append(dict(workload=p.stem,utilization_percent=int(match[1]),operations=int(match[2]),seconds=float(match[3]),kops=float(match[4])))
 assert len(records)==6
