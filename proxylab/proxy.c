@@ -3,7 +3,6 @@
  * socket I/O. Atomic recency stamps allow simultaneous readers; writers alone
  * insert/evict. Network failures affect only the detached connection thread.
  */
-#define _GNU_SOURCE
 #include "csapp.h"
 #include <stdatomic.h>
 #include <stdint.h>
@@ -127,6 +126,14 @@ static int connection_named(const char *list,const header *h)
     return 0;
 }
 
+/* Portable case-insensitive substring search without GNU netdb extensions. */
+static int contains_case(const char *text,const char *needle)
+{
+    size_t n=strlen(needle);
+    for(;*text;text++) if(!strncasecmp(text,needle,n)) return 1;
+    return 0;
+}
+
 /* Cache only complete successful responses; a truncated declared body must
  * never turn into a successful cached object. Full HTTP freshness is outside
  * this lab, but private/no-store, transfer-coded and Vary:* replies bypass. */
@@ -154,7 +161,7 @@ static int cacheable(unsigned char *object,size_t n)
             }
             have_length=1; declared=(size_t)v;
         } else if(!strcasecmp(line,"Transfer-Encoding") ||
-          (!strcasecmp(line,"Cache-Control")&&(strcasestr(colon+1,"no-store")||strcasestr(colon+1,"private")||strcasestr(colon+1,"no-cache"))) ||
+          (!strcasecmp(line,"Cache-Control")&&(contains_case(colon+1,"no-store")||contains_case(colon+1,"private")||contains_case(colon+1,"no-cache"))) ||
           (!strcasecmp(line,"Vary")&&strchr(colon+1,'*'))) {
             *colon=':'; *nextline=saved; return 0;
         }
