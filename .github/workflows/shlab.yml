@@ -1,0 +1,22 @@
+name: CSAPP Shell Lab
+on:
+  push:
+    branches: [edidada/shlab]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  job-control:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get update && sudo apt-get install -y libc6-i386
+      - run: bash scripts/verify_shlab.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shlab-results
+          path: test-results/
