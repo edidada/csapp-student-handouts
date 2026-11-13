@@ -13,10 +13,13 @@ for seed in 17 42 99; do
     (cd perflab && timeout 180 ./driver -s "$seed") | tee "test-results/driver-$seed.log"
     ! grep -qi 'failed correctness\|Error:.*counter' "test-results/driver-$seed.log"
 done
+(cd perflab && timeout 180 ./driver -g -s 1234) | tee test-results/autograder.log
+! grep -qi 'failed correctness' test-results/autograder.log
 python3 - <<'PY'
 from pathlib import Path
 import re,math,json,statistics
 runs=[]
+assert re.search(r'bestscores:[0-9.]+:[0-9.]+:',Path('test-results/autograder.log').read_text())
 for seed in [17,42,99]:
     text=Path(f'test-results/driver-{seed}.log').read_text()
     sections=re.split(r'(?=(?:Rotate|Smooth): Version = )',text)
