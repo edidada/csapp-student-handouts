@@ -1,0 +1,20 @@
+name: Malloc Lab
+on:
+  push:
+    branches: [edidada/malloclab]
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get update && sudo apt-get install -y gcc-multilib
+      - run: bash scripts/verify_malloclab.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: malloclab-results
+          path: test-results
