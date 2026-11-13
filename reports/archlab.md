@@ -12,4 +12,18 @@
 
 ## 当前状态
 
-已读官方讲义并建立独立worktree，尚未实现或执行任何实验。下一步从原sim.tar读取HCL及驱动源码，完成三个部分实现及独立工作流。没有本地编译或模拟。
+三个部分已实现，首轮1606258/run43459958006远端通过：原PartA三例均返回0xcba；SEQ/PIPE标准及iaddq回归、原y86-code、ncopy YIS/PIPE各68/68长度均通过，代码324字节，平均CPE8.30（43.9/60性能分，达到讲义<9目标，不是满分）。随后增加PartA独立边界验收，最终提交须重新运行全部检查；没有本地编译或模拟。
+
+## 实现说明
+
+- sum_list迭代读取链表；rsum_list递归时保存/恢复rbx；copy_block只用调用者保存临时寄存器，非正长度直接返回0。
+- SEQ iaddq取10字节（寄存器字节及立即数），读取rB，ALU计算valC+valB并写回rB，更新ZF/SF/OF；不访问数据内存。
+- PIPE增加相同取指和译码路径，以dstE/srcB接入已有转发及load-use控制；仅在正常状态更新条件码，保留旧指令异常/分支/返回处理。
+- ncopy四路展开，先读四个值再写，隐藏load-use停顿；批量指针更新和iaddq减少常数加载；独立标量尾循环处理非4倍长度，没有按64元素硬编码，也不越界预取。
+- PartA补充33组边界：空/零/负数/混合/64位溢出域，复制零或负长度、目的区前后哨兵，检查复制内容、校验和、rsp及rbx恢复。探针脚本只在远端生成和运行，不改变原测试。
+
+## 运行与兼容边界
+
+独立.github/workflows/archlab.yml只安装flex/bison/libfl-dev并调用scripts/verify_archlab.sh；复用归档sim.tar，不改原回归工具和参考数据。现代GCC以-fcommon兼容旧工具的公共暂定全局定义；GUIMODE/TKLIBS/TKINC为空选择官方TTY实现，不依赖过时Tcl8.5。pipefail和明确成功数量/失败关键词检查避免Perl或tee返回码掩盖测试失败。原seq/pipe各4组ptest在标准及-i模式分别执行，ncopy correctness检查返回成功数必须等于总数，代码长度明确断言<=1000；benchmark不代替correctness。
+
+所有解答文件头含作者和自学ID及设计说明。此为官方公开自学版本，不执行讲义站点占位的handin操作，不声称校内提交或人工评分。源包哈希见SOURCE.json；最终SHA、Actions及永久工件在langnote课程结果中保存。

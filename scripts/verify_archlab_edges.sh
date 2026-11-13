@@ -22,7 +22,7 @@ for name,fn in [('sum','sum_list'),('rsum','rsum_list'),('copy','copy_block')]:
                 for i in range(len(values)):
                     asm += [f'mrmovq {8*i}(%r11), %r8',f'rmmovq %r8, {32+8*i}(%r10)']
                 asm += ['irmovq before, %r11','mrmovq 0(%r11), %r8','rmmovq %r8, 224(%r10)','irmovq after, %r11','mrmovq 0(%r11), %r8','rmmovq %r8, 232(%r10)']
-            asm += ['halt','.pos 0x100',body,'.pos 0x400']
+            asm += ['halt','.pos 0x300',body,'.pos 0x500']
             if name=='copy':
                 asm += ['src:']+[f'.quad 0x{v&mask:x}' for v in values]+['before: .quad 0x11223344','dest:']+['.quad 0x444' for v in values]+['after: .quad 0x55667788']
             elif values:
