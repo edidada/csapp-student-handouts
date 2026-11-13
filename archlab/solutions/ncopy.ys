@@ -1,0 +1,54 @@
+# Author: edidada; self-study ID: edidada
+# Four-way unrolling amortizes pointer/loop updates. Batched loads avoid
+# load/use bubbles; iaddq removes constant-register setup. Scalar tail
+# handles all lengths, including <=0, without speculative memory reads.
+ncopy:
+    xorq %rax, %rax
+    iaddq $-4, %rdx
+    jl TailAdjust
+Loop4:
+    mrmovq 0(%rdi), %r8
+    mrmovq 8(%rdi), %r9
+    mrmovq 16(%rdi), %r10
+    mrmovq 24(%rdi), %r11
+    rmmovq %r8, 0(%rsi)
+    rmmovq %r9, 8(%rsi)
+    rmmovq %r10, 16(%rsi)
+    rmmovq %r11, 24(%rsi)
+    andq %r8, %r8
+    jle Skip0
+    iaddq $1, %rax
+Skip0:
+    andq %r9, %r9
+    jle Skip1
+    iaddq $1, %rax
+Skip1:
+    andq %r10, %r10
+    jle Skip2
+    iaddq $1, %rax
+Skip2:
+    andq %r11, %r11
+    jle Skip3
+    iaddq $1, %rax
+Skip3:
+    iaddq $32, %rdi
+    iaddq $32, %rsi
+    iaddq $-4, %rdx
+    jge Loop4
+TailAdjust:
+    iaddq $4, %rdx
+    jle Done
+Tail:
+    mrmovq 0(%rdi), %r8
+    iaddq $8, %rdi
+    rmmovq %r8, 0(%rsi)
+    andq %r8, %r8
+    jle TailSkip
+    iaddq $1, %rax
+TailSkip:
+    iaddq $8, %rsi
+    iaddq $-1, %rdx
+    jg Tail
+Done:
+    ret
+End:

@@ -1,0 +1,34 @@
+# Author: edidada; self-study ID: edidada
+# Caller-saved temporaries only; non-overlapping copy and XOR checksum.
+.pos 0
+    irmovq stack, %rsp
+    irmovq src, %rdi
+    irmovq dest, %rsi
+    irmovq $3, %rdx
+    call copy_block
+    halt
+.align 8
+src: .quad 0x00a
+     .quad 0x0b0
+     .quad 0xc00
+dest: .quad 0x111
+      .quad 0x222
+      .quad 0x333
+copy_block:
+    xorq %rax, %rax
+    irmovq $8, %r9
+    irmovq $1, %r10
+    andq %rdx, %rdx
+    jle copy_done
+copy_loop:
+    mrmovq 0(%rdi), %r8
+    rmmovq %r8, 0(%rsi)
+    xorq %r8, %rax
+    addq %r9, %rdi
+    addq %r9, %rsi
+    subq %r10, %rdx
+    jg copy_loop
+copy_done:
+    ret
+.pos 0x400
+stack:

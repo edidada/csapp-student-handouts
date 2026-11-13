@@ -1,0 +1,28 @@
+# Author: edidada; self-study ID: edidada
+.pos 0
+    irmovq stack, %rsp
+    irmovq ele1, %rdi
+    call sum_list
+    halt
+.align 8
+ele1: .quad 0x00a
+      .quad ele2
+ele2: .quad 0x0b0
+      .quad ele3
+ele3: .quad 0xc00
+      .quad 0
+sum_list:
+    xorq %rax, %rax
+    andq %rdi, %rdi
+    je sum_done
+sum_loop:
+    mrmovq 0(%rdi), %r8
+    addq %r8, %rax
+    mrmovq 8(%rdi), %rdi
+    andq %rdi, %rdi
+    jne sum_loop
+sum_done:
+    ret
+
+.pos 0x400
+stack:
