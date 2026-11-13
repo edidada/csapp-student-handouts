@@ -18,9 +18,10 @@ for name,fn in [('sum','sum_list'),('rsum','rsum_list'),('copy','copy_block')]:
             if name=='copy':asm += ['irmovq dest, %rsi',f'irmovq ${length}, %rdx']
             asm += [f'call {fn}','irmovq $0x800, %r10','rmmovq %rax, 0(%r10)','rmmovq %rsp, 8(%r10)','rmmovq %rbx, 16(%r10)']
             if name=='copy':
+                asm += ['irmovq dest, %r11']
                 for i in range(len(values)):
-                    asm += [f'mrmovq dest+{8*i}, %r8',f'rmmovq %r8, {32+8*i}(%r10)']
-                asm += ['mrmovq before, %r8','rmmovq %r8, 224(%r10)','mrmovq after, %r8','rmmovq %r8, 232(%r10)']
+                    asm += [f'mrmovq {8*i}(%r11), %r8',f'rmmovq %r8, {32+8*i}(%r10)']
+                asm += ['irmovq before, %r11','mrmovq 0(%r11), %r8','rmmovq %r8, 224(%r10)','irmovq after, %r11','mrmovq 0(%r11), %r8','rmmovq %r8, 232(%r10)']
             asm += ['halt','.pos 0x100',body,'.pos 0x400']
             if name=='copy':
                 asm += ['src:']+[f'.quad 0x{v&mask:x}' for v in values]+['before: .quad 0x11223344','dest:']+['.quad 0x444' for v in values]+['after: .quad 0x55667788']
