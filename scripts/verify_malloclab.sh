@@ -43,6 +43,7 @@ for kind in ['small','mixed','realloc']:
   (out/f'{kind}-{seed}.rep').write_text(f'0\n{slots}\n{len(ops)}\n1\n'+'\n'.join(ops)+'\n')
 PY
 for trace in test-results/traces/*.rep; do
+  ASAN_OPTIONS=detect_leaks=1 timeout 300 .tools/stress-32 "$trace" | tee "${trace%.rep}-replay.log"
   (cd malloclab && timeout 180 ./mdriver -l -V -f "../$trace") | tee "${trace%.rep}.log"
   grep -q 'Perf index' "${trace%.rep}.log"
   if grep -Eq 'ERROR|Terminated with' "${trace%.rep}.log"; then exit 1; fi
@@ -52,6 +53,7 @@ from pathlib import Path
 import re,json
 records=[]
 for p in sorted(Path('test-results/traces').glob('*.log')):
+ if p.stem.endswith('-replay'): continue
  text=p.read_text()
  sections=text.split('Results for mm malloc:')
  assert len(sections)==2,p

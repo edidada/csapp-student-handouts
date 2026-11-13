@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <stdlib.h>
 #include "mm.h"
 #include "memlib.h"
 extern int mm_check(void);
@@ -97,10 +98,40 @@ static void exhaustion(void)
     fill(q,16u*1024*1024,55); verify(q,16u*1024*1024,55); mm_free(q); check();
     printf("EXHAUSTION_OK allocations=%u heap=%zu\n",n,h);
 }
-int main(void)
+/* Replay generated traces with independent content checks after EVERY request. */
+static void replay(const char *path)
+{
+    FILE *f=fopen(path,"r"); int hint,slots,ops,weight,k,index; char op;
+    size_t n,keep,i; void *q;
+    void **blocks; size_t *lengths;
+    assert(f); assert(fscanf(f,"%d%d%d%d",&hint,&slots,&ops,&weight)==4);
+    blocks=calloc((size_t)slots,sizeof(*blocks)); lengths=calloc((size_t)slots,sizeof(*lengths));
+    assert(blocks&&lengths); reset();
+    for(k=0;k<ops;k++) {
+        assert(fscanf(f," %c%d",&op,&index)==2); assert(index>=0&&index<slots);
+        if(op=='a'||op=='r') {
+            assert(fscanf(f,"%zu",&n)==1);
+            q=op=='a'?mm_malloc(n):mm_realloc(blocks[index],n); assert(q);
+            if(op=='r') {
+                keep=n<lengths[index]?n:lengths[index];
+                for(i=0;i<keep;i++) if(((unsigned char *)q)[i]!=value((unsigned)index,i)) {
+                    fprintf(stderr,"REPLAY_BAD path=%s op=%d id=%d old=%zu new=%zu byte=%zu got=%u expected=%u\n",path,k,index,lengths[index],n,i,((unsigned char *)q)[i],value((unsigned)index,i)); abort();
+                }
+            }
+            blocks[index]=q; lengths[index]=n; fill(q,n,(unsigned)index);
+        } else { assert(op=='f'); mm_free(blocks[index]); blocks[index]=NULL; lengths[index]=0; }
+        check();
+        for(index=0;index<slots;index++) if(blocks[index]) verify(blocks[index],lengths[index],(unsigned)index);
+    }
+    fclose(f); free(blocks); free(lengths); printf("REPLAY_OK path=%s operations=%d\n",path,ops);
+}
+int main(int argc, char **argv)
+
 {
     unsigned seeds[]={1,17,42,99,1234567},i;
-    mem_init(); directed();
+    mem_init();
+    if(argc==2) { replay(argv[1]); mem_deinit(); return 0; }
+    directed();
     for(i=0;i<sizeof(seeds)/sizeof(seeds[0]);i++) stress(seeds[i]);
     exhaustion(); mem_deinit();
     printf("MALLOCLAB_STRESS_OK operations=60000 checker_calls=%u\n",calls);
