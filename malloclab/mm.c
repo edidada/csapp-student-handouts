@@ -12,7 +12,7 @@
 #include "memlib.h"
 #include "config.h"
 
-team_t team = {"edidada", "edidada", "", "", ""};
+team_t team = {"edidada", "edidada", "edidada", "", ""};
 #define W sizeof(size_t)
 #define MINBLOCK (2 * W + 2 * sizeof(void *))
 #define CHUNK 4096
