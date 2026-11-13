@@ -30,6 +30,7 @@ def waitfor(fn):
         assert time.monotonic()<deadline,('state timeout',log)
         time.sleep(.02)
 try:
+    send('/bin/echo SHELL_READY');until('SHELL_READY')
     for sig in [signal.SIGINT,signal.SIGTSTP]:os.kill(p.pid,sig)
     send('/bin/echo NO_FOREGROUND_OK');until('NO_FOREGROUND_OK');checks.append('no-foreground-signals')
     for i in range(150):send('/bin/true')
