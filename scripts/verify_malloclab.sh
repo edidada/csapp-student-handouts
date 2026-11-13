@@ -19,3 +19,46 @@ for bits in 32 64; do
   grep -q MALLOCLAB_STRESS_OK "test-results/stress-$bits.log"
 done
 lscpu > test-results/cpu.txt
+
+# Synthetic workloads are explicitly distinct from absent official full traces.
+python3 - <<'PY'
+from pathlib import Path
+import random
+out=Path('test-results/traces'); out.mkdir()
+for kind in ['small','mixed','realloc']:
+ for seed in [17,99]:
+  r=random.Random(seed); live={}; ops=[]; slots=256
+  def amount(): return r.randrange(1,129 if kind=='small' else 8193)
+  for i in range(slots):
+   live[i]=amount(); ops.append(f'a {i} {live[i]}')
+  for k in range(6000):
+   i=r.randrange(slots)
+   if i not in live:
+    live[i]=amount(); ops.append(f'a {i} {live[i]}')
+   elif kind=='realloc' and r.random()<.8:
+    live[i]=amount(); ops.append(f'r {i} {live[i]}')
+   else:
+    del live[i]; ops.append(f'f {i}')
+  for i in live: ops.append(f'f {i}')
+  (out/f'{kind}-{seed}.rep').write_text(f'0\n{slots}\n{len(ops)}\n1\n'+'\n'.join(ops)+'\n')
+PY
+for trace in test-results/traces/*.rep; do
+  (cd malloclab && timeout 180 ./mdriver -l -V -f "../$trace") | tee "${trace%.rep}.log"
+  grep -q 'Perf index' "${trace%.rep}.log"
+  if grep -Eq 'ERROR|Terminated with' "${trace%.rep}.log"; then exit 1; fi
+done
+python3 - <<'PY'
+from pathlib import Path
+import re,json
+records=[]
+for p in sorted(Path('test-results/traces').glob('*.log')):
+ text=p.read_text()
+ sections=text.split('Results for mm malloc:')
+ assert len(sections)==2,p
+ match=re.search(r'^\s*0\s+yes\s+(\d+)%\s+(\d+)\s+([\d.]+)\s+([\d.]+)',sections[1],re.M)
+ assert match,p
+ records.append(dict(workload=p.stem,utilization_percent=int(match[1]),operations=int(match[2]),seconds=float(match[3]),kops=float(match[4])))
+assert len(records)==6
+Path('test-results/workloads.json').write_text(json.dumps(dict(scope='Six synthetic workloads, NOT the missing eleven official grading traces',results=records),indent=2)+'\n')
+print('MALLOCLAB_WORKLOADS_OK count=6')
+PY
