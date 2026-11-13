@@ -20,6 +20,7 @@ for name in sum rsum copy; do
     "$sim/misc/yis" "$sim/misc/$name.yo" | tee "test-results/part-a-$name.log"
     grep -Eq '%rax:.*0x0000000000000cba' "test-results/part-a-$name.log"
 done
+bash scripts/verify_archlab_edges.sh
 for kind in seq pipe; do
     if [[ "$kind" == seq ]]; then target=testssim; binary=ssim; else target=testpsim; binary=psim; fi
     make -C "$sim/y86-code" "$target" | tee "test-results/$kind-benchmarks.log"
