@@ -651,8 +651,10 @@ handler_t *Signal(int signum, handler_t *handler)
  */
 void sigquit_handler(int sig) 
 {
-    printf("Terminating after receipt of SIGQUIT signal\n");
-    exit(1);
+    static const char message[] = "Terminating after receipt of SIGQUIT signal\n";
+    (void)sig;
+    (void)write(STDOUT_FILENO, message, sizeof(message) - 1);
+    _exit(1);
 }
 
 
