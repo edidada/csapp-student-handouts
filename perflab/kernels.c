@@ -10,10 +10,10 @@
  * Please fill in the following team struct 
  */
 team_t team = {
-    "bovik",              /* Team name */
+    "edidada",            /* Self-study team ID */
 
-    "Harry Q. Bovik",     /* First member full name */
-    "bovik@nowhere.edu",  /* First member email address */
+    "edidada",            /* Self-study author */
+    "",                   /* No personal email supplied */
 
     "",                   /* Second member full name (leave blank if none) */
     ""                    /* Second member email addr (leave blank if none) */
@@ -44,10 +44,23 @@ void naive_rotate(int dim, pixel *src, pixel *dst)
  * rotate - Your current working version of rotate
  * IMPORTANT: This is the version you will be graded on
  */
-char rotate_descr[] = "rotate: Current working version";
+char rotate_descr[] = "rotate: 16x16 tiles with contiguous destination writes";
 void rotate(int dim, pixel *src, pixel *dst) 
 {
-    naive_rotate(dim, src, dst);
+    int row, col, i, j;
+    /* 16x16 tiles bound the working set; inner stores are contiguous. */
+    for (row = 0; row < dim; row += 16) {
+        int endrow = row + 16 < dim ? row + 16 : dim;
+        for (col = 0; col < dim; col += 16) {
+            int endcol = col + 16 < dim ? col + 16 : dim;
+            for (j = col; j < endcol; j++) {
+                pixel *out = dst + (dim - 1 - j) * dim + row;
+                for (i = row; i < endrow; i++) {
+                    *out++ = src[i * dim + j];
+                }
+            }
+        }
+    }
 }
 
 /*********************************************************************
@@ -160,10 +173,43 @@ void naive_smooth(int dim, pixel *src, pixel *dst)
  * smooth - Your current working version of smooth. 
  * IMPORTANT: This is the version you will be graded on
  */
-char smooth_descr[] = "smooth: Current working version";
+char smooth_descr[] = "smooth: rolling three-row column sums and separate borders";
 void smooth(int dim, pixel *src, pixel *dst) 
 {
-    naive_smooth(dim, src, dst);
+    int i, j;
+    if (dim < 3) {
+        naive_smooth(dim, src, dst);
+        return;
+    }
+    /* Handle the O(dim) border separately: interior always has 9 samples. */
+    for (j = 0; j < dim; j++) {
+        dst[j] = avg(dim, 0, j, src);
+        dst[(dim - 1) * dim + j] = avg(dim, dim - 1, j, src);
+    }
+    for (i = 1; i < dim - 1; i++) {
+        pixel *top = src + (i - 1) * dim;
+        pixel *mid = src + i * dim;
+        pixel *bottom = src + (i + 1) * dim;
+        int lr = top[0].red + mid[0].red + bottom[0].red;
+        int lg = top[0].green + mid[0].green + bottom[0].green;
+        int lb = top[0].blue + mid[0].blue + bottom[0].blue;
+        int cr = top[1].red + mid[1].red + bottom[1].red;
+        int cg = top[1].green + mid[1].green + bottom[1].green;
+        int cb = top[1].blue + mid[1].blue + bottom[1].blue;
+        dst[i * dim] = avg(dim, i, 0, src);
+        dst[i * dim + dim - 1] = avg(dim, i, dim - 1, src);
+        for (j = 1; j < dim - 1; j++) {
+            int rr = top[j + 1].red + mid[j + 1].red + bottom[j + 1].red;
+            int rg = top[j + 1].green + mid[j + 1].green + bottom[j + 1].green;
+            int rb = top[j + 1].blue + mid[j + 1].blue + bottom[j + 1].blue;
+            pixel *out = dst + i * dim + j;
+            out->red = (unsigned short)((lr + cr + rr) / 9);
+            out->green = (unsigned short)((lg + cg + rg) / 9);
+            out->blue = (unsigned short)((lb + cb + rb) / 9);
+            lr = cr; lg = cg; lb = cb;
+            cr = rr; cg = rg; cb = rb;
+        }
+    }
 }
 
 
